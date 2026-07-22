@@ -11,10 +11,12 @@ body{
     margin:0;
     font-family:system-ui;
     background:#0f0f0f;
+    overflow:hidden;
 }
 
 #map{
     height:100vh;
+    width:100%;
 }
 
 /* BARRE RECHERCHE */
@@ -47,11 +49,11 @@ body{
     height:42px;
     border-radius:50%;
     background:#f1f3f4;
+    border:none;
+    cursor:pointer;
     display:flex;
     align-items:center;
     justify-content:center;
-    border:none;
-    cursor:pointer;
 }
 
 .mic-btn svg{
@@ -71,7 +73,7 @@ body{
     width:85%;
     background:white;
     border-radius:15px;
-    max-height:200px;
+    max-height:250px;
     overflow:auto;
     z-index:1000;
     box-shadow:0 4px 20px rgba(0,0,0,.2);
@@ -86,7 +88,53 @@ body{
     background:#eee;
 }
 
-/* SLIDER ZOOM */
+/* MENU */
+.menuWrapper{
+    position:absolute;
+    top:15px;
+    right:20px;
+    z-index:1000;
+}
+
+.menuBtn{
+    width:45px;
+    height:45px;
+    border:none;
+    border-radius:50%;
+    background:white;
+    font-size:28px;
+    line-height:20px;
+    cursor:pointer;
+    box-shadow:0 4px 15px rgba(0,0,0,.3);
+}
+
+.menuBox{
+    display:none;
+    position:absolute;
+    right:0;
+    top:55px;
+    background:white;
+    padding:8px;
+    border-radius:15px;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+
+.menuBox button{
+    width:170px;
+    padding:12px;
+    border:none;
+    background:white;
+    border-radius:10px;
+    cursor:pointer;
+    text-align:left;
+    font-size:15px;
+}
+
+.menuBox button:hover{
+    background:#eee;
+}
+
+/* SLIDER */
 .zoomWrapper{
     position:absolute;
     right:20px;
@@ -96,24 +144,13 @@ body{
     z-index:1000;
 }
 
-.zoomHint{
-    position:absolute;
-    top:-30px;
-    right:-10px;
-    color:white;
-    background:rgba(0,0,0,.5);
-    padding:4px 8px;
-    border-radius:10px;
-    font-size:12px;
-}
-
 .sliderTrack{
     width:10px;
     height:100%;
     background:rgba(255,255,255,.85);
     border-radius:50px;
-    position:relative;
     box-shadow:0 0 12px white;
+    position:relative;
 }
 
 .sliderThumb{
@@ -147,6 +184,7 @@ body{
     box-shadow:0 4px 15px rgba(0,0,0,.3);
 }
 </style>
+
 </head>
 
 <body>
@@ -161,13 +199,33 @@ body{
 <path d="M12 18v3"></path>
 </svg>
 </button>
-
 </div>
 
 <div id="suggestions" class="suggestions"></div>
 
+
+<div class="menuWrapper">
+
+<button class="menuBtn" onclick="toggleMenu()">
+⋮
+</button>
+
+<div class="menuBox" id="menuBox">
+
+<button onclick="setSatellite()">
+🛰️ Vue satellite
+</button>
+
+<button onclick="setMapView()">
+🗺️ Vue carte
+</button>
+
+</div>
+
+</div>
+
+
 <div class="zoomWrapper">
-<div class="zoomHint">🔍 Zoom</div>
 
 <div class="sliderTrack" id="sliderTrack">
 <div class="sliderThumb" id="sliderThumb"></div>
@@ -175,51 +233,65 @@ body{
 
 </div>
 
+
 <button class="fireBtn" onclick="loadFires()">
 🔥 Feux en direct
 </button>
 
+
 <div id="map"></div>
+
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 
 const API_URL="https://fireworld-api.onrender.com/feux";
 
+/* COUCHES */
+const streetLayer=L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+    attribution:"© OpenStreetMap"
+}
+);
+
+const satelliteLayer=L.tileLayer(
+'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+);
+
+
 /* CARTE */
+
 let map=L.map('map',{
     zoomControl:false,
     zoomSnap:0,
-    zoomDelta:0.2,
-    wheelPxPerZoomLevel:80,
+    zoomDelta:0.1,
+    wheelPxPerZoomLevel:60,
     zoomAnimation:true,
-    fadeAnimation:true,
+    worldCopyJump:false,
     maxBoundsViscosity:1
 }).setView([46.6,2.4],6);
 
 
-map.setMinZoom(2);
-map.setMaxZoom(14);
+streetLayer.addTo(map);
 
 
-let worldBounds=L.latLngBounds(
+map.setMinZoom(1);
+map.setMaxZoom(20);
+
+
+let globeBounds=L.latLngBounds(
     [-85,-180],
     [85,180]
 );
 
-map.setMaxBounds(worldBounds);
 
-
-L.tileLayer(
-    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-        attribution:"© OpenStreetMap"
-    }
-).addTo(map);
+map.setMaxBounds(globeBounds);
 
 
 
 /* ECHELLE */
+
 L.control.scale({
     position:"bottomleft",
     metric:true,
@@ -229,15 +301,58 @@ L.control.scale({
 
 
 
+/* MENU */
+
+function toggleMenu(){
+
+    let box=document.getElementById("menuBox");
+
+    box.style.display=
+    box.style.display==="block"
+    ?"none"
+    :"block";
+
+}
+
+
+function setSatellite(){
+
+    if(map.hasLayer(streetLayer)){
+        map.removeLayer(streetLayer);
+    }
+
+    satelliteLayer.addTo(map);
+
+    document.getElementById("menuBox").style.display="none";
+}
+
+
+
+function setMapView(){
+
+    if(map.hasLayer(satelliteLayer)){
+        map.removeLayer(satelliteLayer);
+    }
+
+    streetLayer.addTo(map);
+
+    document.getElementById("menuBox").style.display="none";
+}
+
+
+
 /* SLIDER ZOOM */
 
 const thumb=document.getElementById("sliderThumb");
 const track=document.getElementById("sliderTrack");
 
-const MIN_ZOOM=2;
-const MAX_ZOOM=14;
+
+const MIN_ZOOM=1;
+const MAX_ZOOM=20;
+
 
 let dragging=false;
+
 
 
 function updateFromSlider(y){
@@ -252,12 +367,17 @@ function updateFromSlider(y){
     let ratio=pos/rect.height;
 
 
-    let zoom=MAX_ZOOM-(ratio*(MAX_ZOOM-MIN_ZOOM));
+    let zoom=
+    MAX_ZOOM-(ratio*(MAX_ZOOM-MIN_ZOOM));
 
 
-    map.setZoom(zoom,{
-        animate:false
-    });
+    map.setZoom(
+        zoom,
+        {
+            animate:false
+        }
+    );
+
 }
 
 
@@ -276,85 +396,175 @@ function syncSliderWithMap(){
 
     thumb.style.top=
     (ratio*rect.height)+"px";
+
 }
 
 
 
-thumb.addEventListener("mousedown",e=>{
+thumb.addEventListener(
+"mousedown",
+e=>{
+
     dragging=true;
+
     e.preventDefault();
+
 });
 
 
-document.addEventListener("mouseup",()=>{
+document.addEventListener(
+"mouseup",
+()=>{
+
     dragging=false;
+
 });
 
 
-document.addEventListener("mousemove",e=>{
+document.addEventListener(
+"mousemove",
+e=>{
+
     if(dragging){
+
         updateFromSlider(e.clientY);
+
     }
+
 });
 
 
 
-thumb.addEventListener("touchstart",()=>{
+thumb.addEventListener(
+"touchstart",
+()=>{
+
     dragging=true;
+
 });
 
 
-document.addEventListener("touchend",()=>{
+document.addEventListener(
+"touchend",
+()=>{
+
     dragging=false;
+
 });
 
 
-document.addEventListener("touchmove",e=>{
+document.addEventListener(
+"touchmove",
+e=>{
+
     if(dragging){
-        updateFromSlider(e.touches[0].clientY);
+
+        updateFromSlider(
+            e.touches[0].clientY
+        );
+
     }
+
 });
 
 
 
-track.addEventListener("click",e=>{
+track.addEventListener(
+"click",
+e=>{
+
     updateFromSlider(e.clientY);
+
 });
 
 
-map.on("zoom",syncSliderWithMap);
-map.on("zoomend",syncSliderWithMap);
+
+map.on(
+"zoom",
+syncSliderWithMap
+);
 
 
-window.addEventListener("resize",syncSliderWithMap);
+map.on(
+"zoomend",
+syncSliderWithMap
+);
 
 
-setTimeout(syncSliderWithMap,300);
+window.addEventListener(
+"resize",
+syncSliderWithMap
+);
 
 
-
+setTimeout(
+syncSliderWithMap,
+300
+);
 /* RECHERCHE */
 
 let suggestionBox=document.getElementById("suggestions");
 let search=document.getElementById("search");
 
-let timer;
+let searchTimer;
 
 
-search.addEventListener("input",function(){
+async function searchPlace(query,zoom=16){
 
-    clearTimeout(timer);
+    let res=await fetch(
+    "https://nominatim.openstreetmap.org/search?format=json&q="
+    +
+    encodeURIComponent(query)
+    +
+    "&limit=1&accept-language=fr"
+    );
+
+
+    let data=await res.json();
+
+
+    if(data.length){
+
+        map.flyTo(
+            [
+                data[0].lat,
+                data[0].lon
+            ],
+            zoom,
+            {
+                duration:1.5
+            }
+        );
+
+    }
+
+}
+
+
+
+/* Recherche automatique */
+
+search.addEventListener(
+"input",
+function(){
+
+    clearTimeout(searchTimer);
+
 
     let query=this.value.trim();
 
 
     if(query.length<2){
+
         suggestionBox.innerHTML="";
+
         return;
+
     }
 
 
-    timer=setTimeout(async()=>{
+    searchTimer=setTimeout(async()=>{
+
 
         let res=await fetch(
         "https://nominatim.openstreetmap.org/search?format=json&q="
@@ -373,40 +583,79 @@ search.addEventListener("input",function(){
 
         data.forEach(place=>{
 
+
             let item=document.createElement("div");
 
+
             item.className="suggestionItem";
+
 
             item.innerText=place.display_name;
 
 
+
             item.onclick=()=>{
+
 
                 map.flyTo(
                     [
                         place.lat,
                         place.lon
                     ],
-                    10,
+                    16,
                     {
-                        duration:1.2
+                        duration:1.5
                     }
                 );
 
+
                 search.value=place.display_name;
 
+
                 suggestionBox.innerHTML="";
+
             };
 
 
             suggestionBox.appendChild(item);
+
 
         });
 
 
     },400);
 
+
 });
+
+
+
+
+
+/* Recherche avec Entrée */
+
+search.addEventListener(
+"keydown",
+function(e){
+
+    if(e.key==="Enter"){
+
+        let query=this.value.trim();
+
+
+        if(query.length>=2){
+
+            searchPlace(query,16);
+
+            suggestionBox.innerHTML="";
+
+        }
+
+    }
+
+});
+
+
 
 
 
@@ -420,29 +669,42 @@ function startVoice(){
 
 
     if(!SpeechRecognition){
-        alert("Micro non disponible");
+
+        alert(
+        "La reconnaissance vocale n'est pas disponible"
+        );
+
         return;
+
     }
 
 
     let recognition=new SpeechRecognition();
 
+
     recognition.lang="fr-FR";
 
 
-    recognition.onresult=e=>{
+    recognition.onresult=function(e){
+
 
         search.value=
         e.results[0][0].transcript;
 
-        search.dispatchEvent(
-            new Event("input")
+
+        searchPlace(
+            search.value,
+            16
         );
+
+
     };
 
 
     recognition.start();
+
 }
+
 
 
 
@@ -454,12 +716,15 @@ let markers=[];
 
 async function loadFires(){
 
+
     clearMap();
 
 
     try{
 
+
         let res=await fetch(API_URL);
+
 
         let text=await res.text();
 
@@ -467,18 +732,25 @@ async function loadFires(){
         let rows=text.split("\n").slice(1);
 
 
+
         rows.forEach(row=>{
+
 
             let cols=row.split(",");
 
 
             let lat=parseFloat(cols[0]);
+
             let lon=parseFloat(cols[1]);
+
             let bright=parseFloat(cols[2]);
 
 
+
             if(isNaN(lat)||isNaN(lon)){
+
                 return;
+
             }
 
 
@@ -492,15 +764,25 @@ async function loadFires(){
 
 
             let marker=L.circleMarker(
-                [lat,lon],
+                [
+                    lat,
+                    lon
+                ],
                 {
+
                     radius:5,
+
                     color:color,
+
                     fillColor:color,
-                    fillOpacity:.8,
+
+                    fillOpacity:.85,
+
                     weight:1
+
                 }
-            ).addTo(map);
+            )
+            .addTo(map);
 
 
 
@@ -516,17 +798,21 @@ async function loadFires(){
 
             markers.push(marker);
 
+
         });
 
 
     }
     catch(e){
 
-        alert("Erreur chargement des feux");
-
         console.log(e);
 
+        alert(
+        "Impossible de charger les feux"
+        );
+
     }
+
 
 }
 
@@ -534,12 +820,15 @@ async function loadFires(){
 
 function clearMap(){
 
-    markers.forEach(m=>{
-        map.removeLayer(m);
-    });
+    markers.forEach(
+        m=>map.removeLayer(m)
+    );
+
 
     markers=[];
+
 }
+
 
 
 </script>
