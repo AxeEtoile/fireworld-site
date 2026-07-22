@@ -7,122 +7,177 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-body { margin:0; font-family: 'Segoe UI'; background:black; }
+body {
+    margin:0;
+    font-family: system-ui;
+    background:#0f0f0f;
+}
 
 #map { height:100vh; }
 
-.panel {
+/* BARRE GOOGLE */
+.topbar {
     position:absolute;
-    top:20px;
-    left:20px;
+    top:15px;
+    left:50%;
+    transform:translateX(-50%);
+    width:90%;
+    display:flex;
+    background:white;
+    border-radius:30px;
+    padding:6px;
     z-index:1000;
-    background:rgba(0,0,0,0.85);
-    padding:15px;
-    border-radius:15px;
-    color:white;
-    width:260px;
-    box-shadow:0 0 20px rgba(255,0,0,0.3);
+    box-shadow:0 4px 20px rgba(0,0,0,0.2);
 }
 
-.panel h2 { margin-top:0; }
-
-button {
-    width:100%;
-    margin-top:8px;
-    padding:10px;
+.topbar input {
+    flex:1;
     border:none;
-    border-radius:8px;
-    background:linear-gradient(45deg, red, orange);
-    color:white;
-    font-weight:bold;
+    outline:none;
+    padding:10px;
+    font-size:16px;
+    border-radius:30px;
+}
+
+.topbar button {
+    border:none;
+    background:none;
+    font-size:20px;
     cursor:pointer;
 }
 
-button:hover { opacity:0.8; }
-
-.search {
-    width:100%;
-    padding:8px;
-    border-radius:6px;
-    border:none;
-    margin-top:8px;
-}
-
-.legend {
+/* SLIDER */
+.slider {
     position:absolute;
-    bottom:20px;
-    right:20px;
-    background:black;
-    color:white;
-    padding:10px;
-    border-radius:10px;
+    top:75px;
+    left:50%;
+    transform:translateX(-50%);
+    width:80%;
+    z-index:1000;
 }
 
-.legend div { margin:5px 0; }
+.slider input {
+    width:100%;
+}
+
+#zoomLabel {
+    text-align:center;
+    color:white;
+    font-size:14px;
+}
+
+/* BOUTON FEUX */
+.fireBtn {
+    position:absolute;
+    bottom:30px;
+    left:50%;
+    transform:translateX(-50%);
+    background:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:30px;
+    font-weight:bold;
+    cursor:pointer;
+    z-index:1000;
+}
 </style>
 </head>
 
 <body>
 
-<div class="panel">
-<h2>🔥 FireWorld</h2>
-
-<input class="search" id="searchCity" placeholder="Entrer une ville">
-
-<button onclick="searchCity()">🔍 Rechercher</button>
-<button onclick="loadFires()">🔥 Charger feux en direct</button>
-<button onclick="locateUser()">📍 Me localiser</button>
-<button onclick="resetMap()">❌ Reset</button>
-
+<div class="topbar">
+    <input id="search" placeholder="Rechercher un lieu...">
+    <button onclick="startVoice()">🎤</button>
 </div>
+
+<div class="slider">
+    <input type="range" min="1" max="5" value="3" id="zoomLevel">
+    <div id="zoomLabel">Région</div>
+</div>
+
+<button class="fireBtn" onclick="loadFires()">🔥 Afficher les feux</button>
 
 <div id="map"></div>
-
-<div class="legend">
-<div style="color:green">● Faible</div>
-<div style="color:yellow">● Moyen</div>
-<div style="color:orange">● Élevé</div>
-<div style="color:red">● Critique</div>
-</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-// ====== CONFIG
 const API_URL = "https://fireworld-api.onrender.com/feux";
 
-// ====== MAP
 let map = L.map('map').setView([46.6, 2.4], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let markers = [];
 
-// ====== LOAD FIRES
+// 🎚️ ZOOM INTELLIGENT
+function getZoom(){
+    const zooms = [2,5,8,11,14];
+    return zooms[document.getElementById("zoomLevel").value - 1];
+}
+
+const labels = ["Monde","Pays","Région","Département","Ville"];
+
+document.getElementById("zoomLevel").oninput = function(){
+    document.getElementById("zoomLabel").innerText = labels[this.value - 1];
+};
+
+// 🔍 RECHERCHE
+async function searchCity(){
+    let query = document.getElementById("search").value;
+
+    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+    let data = await res.json();
+
+    if(data.length > 0){
+        map.setView([data[0].lat, data[0].lon], getZoom());
+    }
+}
+
+// ENTER = recherche
+document.getElementById("search").addEventListener("keydown", function(e){
+    if(e.key === "Enter") searchCity();
+});
+
+// 🎤 MICRO
+function startVoice(){
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "fr-FR";
+
+    recognition.onresult = function(e){
+        let text = e.results[0][0].transcript;
+        document.getElementById("search").value = text;
+        searchCity();
+    };
+
+    recognition.start();
+}
+
+// 🔥 FEUX NASA
 async function loadFires(){
 
-    resetMap();
+    clearMap();
 
-    const res = await fetch(API_URL);
-    const text = await res.text();
+    let res = await fetch(API_URL);
+    let text = await res.text();
 
-    const rows = text.split("\n").slice(1);
+    let rows = text.split("\n").slice(1);
 
     rows.forEach(row => {
 
-        const cols = row.split(",");
+        let cols = row.split(",");
 
         let lat = parseFloat(cols[0]);
         let lon = parseFloat(cols[1]);
-        let brightness = parseFloat(cols[2]);
+        let bright = parseFloat(cols[2]);
 
         if(!lat || !lon) return;
 
         let color =
-            brightness > 350 ? "red" :
-            brightness > 320 ? "orange" :
-            brightness > 300 ? "yellow" : "green";
+            bright > 350 ? "#ff0000" :
+            bright > 320 ? "#ff8800" :
+            bright > 300 ? "#ffd000" : "#00ff88";
 
         let marker = L.circleMarker([lat, lon], {
             radius:5,
@@ -132,41 +187,23 @@ async function loadFires(){
 
         marker.bindPopup(`
             🔥 Feu détecté<br>
-            Intensité: ${brightness}
+            Intensité : ${bright}
         `);
 
         markers.push(marker);
     });
 }
 
-// ====== RESET
-function resetMap(){
+// RESET MAP
+function clearMap(){
     markers.forEach(m => map.removeLayer(m));
     markers = [];
 }
 
-// ====== GEOLOC
-function locateUser(){
-    map.locate({setView:true, maxZoom:10});
-}
+</script>
 
-map.on("locationfound", e=>{
-    L.marker(e.latlng).addTo(map)
-    .bindPopup("📍 Vous êtes ici")
-    .openPopup();
-});
-
-// ====== SEARCH CITY
-async function searchCity(){
-    let city = document.getElementById("searchCity").value;
-
-    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${city}`);
-    let data = await res.json();
-
-    if(data.length > 0){
-        map.setView([data[0].lat, data[0].lon], 10);
-    }
-}
+</body>
+</html>
 
 </script>
 
