@@ -39,10 +39,10 @@ body {
     border-radius:50px;
 }
 
-/* ===== MICRO ===== */
+/* ===== MICRO GOOGLE STYLE ===== */
 .mic-btn {
-    width:40px;
-    height:40px;
+    width:42px;
+    height:42px;
     border-radius:50%;
     background:#f1f3f4;
     display:flex;
@@ -52,7 +52,15 @@ body {
     cursor:pointer;
 }
 
-/* ===== SLIDER PRO ===== */
+.mic-btn svg {
+    width:20px;
+    height:20px;
+    stroke:#202124;
+    stroke-width:2;
+    fill:none;
+}
+
+/* ===== SLIDER ===== */
 .zoomWrapper {
     position:absolute;
     right:20px;
@@ -60,41 +68,41 @@ body {
     transform:translateY(-50%);
     height:65%;
     display:flex;
+    flex-direction:column;
     align-items:center;
+    justify-content:space-between;
     z-index:1000;
 }
 
-.zoomIcons {
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-    height:100%;
-    margin-right:10px;
-    font-size:18px;
+/* + et - */
+.zoomBtn {
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+    margin:5px 0;
 }
 
 /* TRACK */
 .sliderTrack {
-    width:8px;
-    height:100%;
+    width:4px;
+    flex:1;
+    background:white;
     border-radius:50px;
-    background:linear-gradient(to top, #ff4d00, #ffaa00, #00ff88);
     position:relative;
 }
 
 /* THUMB */
 .sliderThumb {
-    width:22px;
-    height:22px;
+    width:16px;
+    height:16px;
     border-radius:50%;
     background:white;
-    border:3px solid #ff4d00;
     position:absolute;
     left:50%;
-    transform:translate(-50%, -50%);
+    transform:translateX(-50%);
     top:50%;
     cursor:pointer;
-    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
 }
 
 /* ===== BOUTON ===== */
@@ -119,22 +127,27 @@ body {
 <!-- BARRE -->
 <div class="topbar">
     <input id="search" placeholder="Rechercher un lieu...">
-    <button onclick="startVoice()" class="mic-btn">🎤</button>
+    <button onclick="startVoice()" class="mic-btn">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 3v10"></path>
+            <rect x="8" y="3" width="8" height="12" rx="4"></rect>
+            <path d="M5 11a7 7 0 0 0 14 0"></path>
+            <path d="M12 18v3"></path>
+        </svg>
+    </button>
 </div>
 
 <!-- SLIDER -->
 <div class="zoomWrapper">
-    <div class="zoomIcons">
-        <div>🌍</div>
-        <div>🌐</div>
-        <div>🗺️</div>
-        <div>📍</div>
-        <div>🏙️</div>
-    </div>
+
+    <div class="zoomBtn">+</div>
 
     <div class="sliderTrack" id="sliderTrack">
         <div class="sliderThumb" id="sliderThumb"></div>
     </div>
+
+    <div class="zoomBtn">−</div>
+
 </div>
 
 <button class="fireBtn" onclick="loadFires()">🔥 Feux en direct</button>
@@ -153,7 +166,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let markers = [];
 
-/* ===== SLIDER CUSTOM ===== */
+/* ===== SLIDER FIX TOTAL ===== */
 const thumb = document.getElementById("sliderThumb");
 const track = document.getElementById("sliderTrack");
 
@@ -169,7 +182,8 @@ function updatePosition(y) {
 
     thumb.style.top = pos + "px";
 
-    let step = Math.round((pos / rect.height) * 4);
+    let ratio = pos / rect.height;
+    let step = Math.round(ratio * 4);
     let zoom = zoomMap[4 - step];
 
     map.setZoom(zoom);
@@ -178,13 +192,15 @@ function updatePosition(y) {
 /* souris */
 thumb.addEventListener("mousedown", () => dragging = true);
 document.addEventListener("mouseup", () => dragging = false);
+
 document.addEventListener("mousemove", (e) => {
     if (dragging) updatePosition(e.clientY);
 });
 
-/* tactile */
+/* mobile */
 thumb.addEventListener("touchstart", () => dragging = true);
 document.addEventListener("touchend", () => dragging = false);
+
 document.addEventListener("touchmove", (e) => {
     if (dragging) updatePosition(e.touches[0].clientY);
 });
@@ -194,9 +210,10 @@ track.addEventListener("click", (e) => {
     updatePosition(e.clientY);
 });
 
-/* position initiale */
+/* position initiale centrée */
 setTimeout(() => {
-    updatePosition(track.getBoundingClientRect().height / 2);
+    const rect = track.getBoundingClientRect();
+    updatePosition(rect.top + rect.height / 2);
 }, 100);
 
 /* SEARCH */
