@@ -15,7 +15,7 @@ body {
 
 #map { height:100vh; }
 
-/* ===== BARRE RECHERCHE ===== */
+/* ===== BARRE ===== */
 .topbar {
     position:absolute;
     top:15px;
@@ -24,10 +24,10 @@ body {
     width:90%;
     display:flex;
     background:white;
-    border-radius:30px;
+    border-radius:50px;
     padding:6px;
     z-index:1000;
-    box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    box-shadow:0 4px 20px rgba(0,0,0,0.25);
 }
 
 .topbar input {
@@ -36,10 +36,10 @@ body {
     outline:none;
     padding:10px;
     font-size:16px;
-    border-radius:30px;
+    border-radius:50px;
 }
 
-/* ===== MICRO PRO ===== */
+/* ===== MICRO ===== */
 .mic-btn {
     width:40px;
     height:40px;
@@ -50,11 +50,6 @@ body {
     justify-content:center;
     border:none;
     cursor:pointer;
-    transition:0.2s;
-}
-
-.mic-btn:hover {
-    background:#e0e0e0;
 }
 
 .mic-btn svg {
@@ -65,35 +60,70 @@ body {
     stroke-width:2;
 }
 
-/* ===== SLIDER VERTICAL ===== */
-.zoomControl {
+/* ===== SLIDER PREMIUM ===== */
+.zoomWrapper {
     position:absolute;
-    right:15px;
-    top:120px;
-    height:250px;
+    right:20px;
+    top:50%;
+    transform:translateY(-50%);
+    height:70%;
     display:flex;
     align-items:center;
     z-index:1000;
 }
 
-.labels {
+.zoomLabels {
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-    margin-right:10px;
+    height:100%;
+    margin-right:12px;
     color:white;
-    font-size:12px;
+    font-size:13px;
+    opacity:0.9;
 }
 
-.verticalSlider {
-    writing-mode: bt-lr;
-    -webkit-appearance: slider-vertical;
-    width:30px;
-    height:250px;
+/* SLIDER */
+.zoomSlider {
+    -webkit-appearance:none;
+    appearance:none;
+    width:6px;
+    height:100%;
+    background:rgba(255,255,255,0.15);
+    border-radius:50px;
+    outline:none;
     cursor:pointer;
 }
 
-/* ===== BOUTON FEUX ===== */
+/* TRACK */
+.zoomSlider::-webkit-slider-runnable-track {
+    width:6px;
+    height:100%;
+    border-radius:50px;
+    background:linear-gradient(to top, #ff4d00, #ffaa00, #00ff88);
+}
+
+/* ROND */
+.zoomSlider::-webkit-slider-thumb {
+    -webkit-appearance:none;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:white;
+    border:3px solid #ff4d00;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* FIREFOX */
+.zoomSlider::-moz-range-thumb {
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:white;
+    border:3px solid #ff4d00;
+}
+
+/* ===== BOUTON ===== */
 .fireBtn {
     position:absolute;
     bottom:30px;
@@ -123,8 +153,8 @@ body {
 </div>
 
 <!-- SLIDER -->
-<div class="zoomControl">
-    <div class="labels">
+<div class="zoomWrapper">
+    <div class="zoomLabels">
         <span>Monde</span>
         <span>Pays</span>
         <span>Région</span>
@@ -132,11 +162,10 @@ body {
         <span>Ville</span>
     </div>
 
-    <input type="range" min="1" max="5" value="3" id="zoomLevel" class="verticalSlider">
+    <input type="range" min="1" max="5" value="3" id="zoomLevel" class="zoomSlider">
 </div>
 
-<!-- BOUTON -->
-<button class="fireBtn" onclick="loadFires()">🔥 Afficher les feux</button>
+<button class="fireBtn" onclick="loadFires()">🔥 Feux en direct</button>
 
 <div id="map"></div>
 
@@ -152,18 +181,17 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let markers = [];
 
-// ===== ZOOM =====
+/* ZOOM */
 function getZoom(){
     const zooms = [2,5,8,11,14];
     return zooms[document.getElementById("zoomLevel").value - 1];
 }
 
-// slider live zoom
 document.getElementById("zoomLevel").oninput = function(){
     map.setZoom(getZoom());
 };
 
-// ===== SEARCH =====
+/* SEARCH */
 async function searchCity(){
     let query = document.getElementById("search").value;
 
@@ -175,12 +203,11 @@ async function searchCity(){
     }
 }
 
-// enter = recherche
 document.getElementById("search").addEventListener("keydown", function(e){
     if(e.key === "Enter") searchCity();
 });
 
-// ===== MICRO =====
+/* MICRO */
 function startVoice(){
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = "fr-FR";
@@ -194,7 +221,7 @@ function startVoice(){
     recognition.start();
 }
 
-// ===== FEUX =====
+/* FEUX */
 async function loadFires(){
 
     clearMap();
@@ -225,25 +252,18 @@ async function loadFires(){
             fillOpacity:0.8
         }).addTo(map);
 
-        marker.bindPopup(`
-            🔥 Feu détecté<br>
-            Intensité : ${bright}
-        `);
+        marker.bindPopup(`🔥 Intensité : ${bright}`);
 
         markers.push(marker);
     });
 }
 
-// ===== RESET =====
+/* RESET */
 function clearMap(){
     markers.forEach(m => map.removeLayer(m));
     markers = [];
 }
 
-</script>
-
-</body>
-</html>
 </script>
 
 </body>
