@@ -1,1134 +1,548 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
-
 <title>🔥 FireWorld</title>
 
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-
-
-body {
-
+body{
     margin:0;
     font-family:system-ui;
     background:#0f0f0f;
-
 }
 
-
-#map {
-
+#map{
     height:100vh;
-
 }
 
-
-
-/* =====================
- BARRE RECHERCHE
-===================== */
-
-
-.topbar {
-
+/* BARRE RECHERCHE */
+.topbar{
     position:absolute;
-
     top:15px;
-
     left:50%;
-
     transform:translateX(-50%);
-
     width:90%;
-
     display:flex;
-
     background:white;
-
     border-radius:50px;
-
     padding:6px;
-
     z-index:1000;
-
-    box-shadow:0 4px 20px rgba(0,0,0,0.25);
-
+    box-shadow:0 4px 20px rgba(0,0,0,.25);
 }
 
-
-
-.topbar input {
-
+.topbar input{
     flex:1;
-
     border:none;
-
     outline:none;
-
     padding:10px;
-
     font-size:16px;
-
     border-radius:50px;
-
 }
 
-
-
-/* =====================
- MICRO
-===================== */
-
-
-.mic-btn {
-
+/* MICRO */
+.mic-btn{
     width:42px;
-
     height:42px;
-
     border-radius:50%;
-
     background:#f1f3f4;
-
-    border:none;
-
-    cursor:pointer;
-
     display:flex;
-
-    justify-content:center;
-
     align-items:center;
-
-}
-
-
-
-.mic-btn svg {
-
-    width:20px;
-
-    height:20px;
-
-    stroke:#202124;
-
-    stroke-width:2;
-
-    fill:none;
-
-}
-
-
-
-/* =====================
- SUGGESTIONS
-===================== */
-
-
-.suggestions {
-
-    position:absolute;
-
-    top:70px;
-
-    left:50%;
-
-    transform:translateX(-50%);
-
-    width:85%;
-
-    background:white;
-
-    border-radius:15px;
-
-    max-height:250px;
-
-    overflow:auto;
-
-    z-index:1000;
-
-    box-shadow:0 4px 20px rgba(0,0,0,0.2);
-
-}
-
-
-
-.suggestionItem {
-
-    padding:10px;
-
-    cursor:pointer;
-
-}
-
-
-
-.suggestionItem:hover {
-
-    background:#eee;
-
-}
-
-
-
-
-
-/* =====================
- SLIDER ZOOM
-===================== */
-
-
-.zoomWrapper {
-
-    position:absolute;
-
-    right:20px;
-
-    top:50%;
-
-    transform:translateY(-50%);
-
-    height:65%;
-
-    z-index:1000;
-
-}
-
-
-
-.zoomHint {
-
-    position:absolute;
-
-    top:-28px;
-
-    right:-5px;
-
-    color:white;
-
-    font-size:13px;
-
-    background:rgba(0,0,0,0.4);
-
-    padding:4px 8px;
-
-    border-radius:10px;
-
-}
-
-
-
-.sliderTrack {
-
-    width:10px;
-
-    height:100%;
-
-    background:rgba(255,255,255,0.9);
-
-    border-radius:50px;
-
-    position:relative;
-
-    box-shadow:0 0 12px rgba(255,255,255,.7);
-
-}
-
-
-
-.sliderThumb {
-
-    width:22px;
-
-    height:22px;
-
-    border-radius:50%;
-
-    background:white;
-
-    position:absolute;
-
-    left:50%;
-
-    transform:translate(-50%,-50%);
-
-    cursor:pointer;
-
-    box-shadow:0 4px 15px rgba(0,0,0,.7);
-
-}
-
-
-
-
-/* =====================
- BOUTON FEUX
-===================== */
-
-
-.fireBtn {
-
-    position:absolute;
-
-    bottom:30px;
-
-    left:50%;
-
-    transform:translateX(-50%);
-
-    background:white;
-
+    justify-content:center;
     border:none;
-
-    padding:12px 25px;
-
-    border-radius:30px;
-
-    font-weight:bold;
-
     cursor:pointer;
-
-    z-index:1000;
-
-    box-shadow:0 4px 15px rgba(0,0,0,.3);
-
 }
 
+.mic-btn svg{
+    width:20px;
+    height:20px;
+    stroke:#202124;
+    stroke-width:2;
+    fill:none;
+}
 
+/* SUGGESTIONS */
+.suggestions{
+    position:absolute;
+    top:70px;
+    left:50%;
+    transform:translateX(-50%);
+    width:85%;
+    background:white;
+    border-radius:15px;
+    max-height:200px;
+    overflow:auto;
+    z-index:1000;
+    box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+
+.suggestionItem{
+    padding:10px;
+    cursor:pointer;
+}
+
+.suggestionItem:hover{
+    background:#eee;
+}
+
+/* SLIDER ZOOM */
+.zoomWrapper{
+    position:absolute;
+    right:20px;
+    top:50%;
+    transform:translateY(-50%);
+    height:65%;
+    z-index:1000;
+}
+
+.zoomHint{
+    position:absolute;
+    top:-30px;
+    right:-10px;
+    color:white;
+    background:rgba(0,0,0,.5);
+    padding:4px 8px;
+    border-radius:10px;
+    font-size:12px;
+}
+
+.sliderTrack{
+    width:10px;
+    height:100%;
+    background:rgba(255,255,255,.85);
+    border-radius:50px;
+    position:relative;
+    box-shadow:0 0 12px white;
+}
+
+.sliderThumb{
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:#ff5722;
+    border:3px solid white;
+    position:absolute;
+    left:50%;
+    transform:translate(-50%,-50%);
+    cursor:pointer;
+    box-shadow:
+    0 0 12px rgba(255,87,34,.9),
+    0 4px 15px rgba(0,0,0,.7);
+}
+
+/* BOUTON FEUX */
+.fireBtn{
+    position:absolute;
+    bottom:30px;
+    left:50%;
+    transform:translateX(-50%);
+    background:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:30px;
+    font-weight:bold;
+    cursor:pointer;
+    z-index:1000;
+    box-shadow:0 4px 15px rgba(0,0,0,.3);
+}
 </style>
-
-
 </head>
-
-
 
 <body>
 
-
-
 <div class="topbar">
-
 <input id="search" placeholder="Rechercher un lieu...">
 
-
 <button onclick="startVoice()" class="mic-btn">
-
-
 <svg viewBox="0 0 24 24">
-
 <rect x="8" y="3" width="8" height="12" rx="4"></rect>
-
 <path d="M5 11a7 7 0 0 0 14 0"></path>
-
 <path d="M12 18v3"></path>
-
 </svg>
-
-
 </button>
 
-
 </div>
-
-
-
 
 <div id="suggestions" class="suggestions"></div>
 
-
-
-
 <div class="zoomWrapper">
-
-
-<div class="zoomHint">
-🔍 Zoom
-</div>
-
+<div class="zoomHint">🔍 Zoom</div>
 
 <div class="sliderTrack" id="sliderTrack">
-
-
 <div class="sliderThumb" id="sliderThumb"></div>
-
-
 </div>
 
-
 </div>
-
-
-
 
 <button class="fireBtn" onclick="loadFires()">
-
 🔥 Feux en direct
-
 </button>
-
-
-
 
 <div id="map"></div>
 
-
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 
+const API_URL="https://fireworld-api.onrender.com/feux";
 
-const API_URL = "https://fireworld-api.onrender.com/feux";
-
-
-
-/* =========================
-        CARTE LEAFLET
-========================= */
-
-
-let map = L.map("map", {
-
+/* CARTE */
+let map=L.map('map',{
     zoomControl:false,
-
-    // zoom plus doux
     zoomSnap:0,
-
     zoomDelta:0.2,
-
     wheelPxPerZoomLevel:80,
-
     zoomAnimation:true,
-
-    fadeAnimation:true
-
-})
-.setView([46.6,2.4],6);
+    fadeAnimation:true,
+    maxBoundsViscosity:1
+}).setView([46.6,2.4],6);
 
 
-
-map.setMinZoom(4);
-
+map.setMinZoom(2);
 map.setMaxZoom(14);
 
 
+let worldBounds=L.latLngBounds(
+    [-85,-180],
+    [85,180]
+);
+
+map.setMaxBounds(worldBounds);
+
 
 L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     {
-
         attribution:"© OpenStreetMap"
-
     }
-
 ).addTo(map);
 
 
 
-
-
-/* =========================
-       ECHELLE DISTANCE
-========================= */
-
-
+/* ECHELLE */
 L.control.scale({
-
     position:"bottomleft",
-
     metric:true,
-
     imperial:false,
-
     maxWidth:200
-
 }).addTo(map);
 
 
 
+/* SLIDER ZOOM */
 
+const thumb=document.getElementById("sliderThumb");
+const track=document.getElementById("sliderTrack");
 
+const MIN_ZOOM=2;
+const MAX_ZOOM=14;
 
+let dragging=false;
 
-/* =========================
-       SLIDER ZOOM FLUIDE
-========================= */
-
-
-const thumb = document.getElementById("sliderThumb");
-
-const track = document.getElementById("sliderTrack");
-
-
-
-const MIN_ZOOM = 4;
-
-const MAX_ZOOM = 14;
-
-
-
-let dragging = false;
-
-
-
-
-// position slider -> zoom
 
 function updateFromSlider(y){
 
+    let rect=track.getBoundingClientRect();
 
-    const rect = track.getBoundingClientRect();
+    let pos=y-rect.top;
 
-
-    let pos = y - rect.top;
-
-
-    pos = Math.max(
-        0,
-        Math.min(pos,rect.height)
-    );
+    pos=Math.max(0,Math.min(pos,rect.height));
 
 
-
-    let ratio = pos / rect.height;
-
+    let ratio=pos/rect.height;
 
 
-    // haut = zoom maximum
-    let zoom = MAX_ZOOM - 
-        ratio * (MAX_ZOOM - MIN_ZOOM);
+    let zoom=MAX_ZOOM-(ratio*(MAX_ZOOM-MIN_ZOOM));
 
 
-
-    map.setZoom(
-        zoom,
-        {
-            animate:false
-        }
-    );
-
+    map.setZoom(zoom,{
+        animate:false
+    });
 }
 
 
-
-
-
-// zoom -> position slider
 
 function syncSliderWithMap(){
 
+    let rect=track.getBoundingClientRect();
 
-    const rect = track.getBoundingClientRect();
-
-
-    let zoom = map.getZoom();
+    let zoom=map.getZoom();
 
 
-
-    let ratio =
-    (MAX_ZOOM - zoom) /
-    (MAX_ZOOM - MIN_ZOOM);
-
+    let ratio=
+    (MAX_ZOOM-zoom)/
+    (MAX_ZOOM-MIN_ZOOM);
 
 
-    let position =
-        ratio * rect.height;
-
-
-
-    thumb.style.top =
-        position + "px";
-
-
+    thumb.style.top=
+    (ratio*rect.height)+"px";
 }
 
 
 
-
-
-/* souris */
-
-
-thumb.addEventListener(
-"mousedown",
-(e)=>{
-
+thumb.addEventListener("mousedown",e=>{
     dragging=true;
-
     e.preventDefault();
-
 });
 
 
-
-document.addEventListener(
-"mouseup",
-()=>{
-
+document.addEventListener("mouseup",()=>{
     dragging=false;
+});
 
+
+document.addEventListener("mousemove",e=>{
+    if(dragging){
+        updateFromSlider(e.clientY);
+    }
 });
 
 
 
-document.addEventListener(
-"mousemove",
-(e)=>{
+thumb.addEventListener("touchstart",()=>{
+    dragging=true;
+});
 
 
+document.addEventListener("touchend",()=>{
+    dragging=false;
+});
+
+
+document.addEventListener("touchmove",e=>{
     if(dragging){
+        updateFromSlider(e.touches[0].clientY);
+    }
+});
 
-        updateFromSlider(e.clientY);
 
+
+track.addEventListener("click",e=>{
+    updateFromSlider(e.clientY);
+});
+
+
+map.on("zoom",syncSliderWithMap);
+map.on("zoomend",syncSliderWithMap);
+
+
+window.addEventListener("resize",syncSliderWithMap);
+
+
+setTimeout(syncSliderWithMap,300);
+
+
+
+/* RECHERCHE */
+
+let suggestionBox=document.getElementById("suggestions");
+let search=document.getElementById("search");
+
+let timer;
+
+
+search.addEventListener("input",function(){
+
+    clearTimeout(timer);
+
+    let query=this.value.trim();
+
+
+    if(query.length<2){
+        suggestionBox.innerHTML="";
+        return;
     }
 
 
-});
+    timer=setTimeout(async()=>{
 
-
-
-
-
-
-/* tactile */
-
-
-thumb.addEventListener(
-"touchstart",
-()=>{
-
-    dragging=true;
-
-});
-
-
-
-document.addEventListener(
-"touchend",
-()=>{
-
-    dragging=false;
-
-});
-
-
-
-document.addEventListener(
-"touchmove",
-(e)=>{
-
-
-    if(dragging){
-
-        updateFromSlider(
-            e.touches[0].clientY
+        let res=await fetch(
+        "https://nominatim.openstreetmap.org/search?format=json&q="
+        +
+        encodeURIComponent(query)
+        +
+        "&limit=5&accept-language=fr"
         );
 
-    }
 
+        let data=await res.json();
 
-});
-
-
-
-
-
-
-
-// clic sur la barre
-
-track.addEventListener(
-"click",
-(e)=>{
-
-    updateFromSlider(e.clientY);
-
-});
-
-
-
-
-
-
-
-/* =========================
-     SYNCHRO MOLETTE
-========================= */
-
-
-map.on(
-"zoom",
-()=>{
-
-    syncSliderWithMap();
-
-});
-
-
-
-map.on(
-"zoomend",
-()=>{
-
-    syncSliderWithMap();
-
-});
-
-
-
-window.addEventListener(
-"resize",
-()=>{
-
-    syncSliderWithMap();
-
-});
-
-
-
-setTimeout(
-syncSliderWithMap,
-300
-);
-
-/* =========================
-       RECHERCHE + AUTOCOMPLETE
-========================= */
-
-
-let suggestionBox =
-document.getElementById("suggestions");
-
-
-let search =
-document.getElementById("search");
-
-
-
-let searchTimer;
-
-
-
-search.addEventListener(
-"input",
-function(){
-
-
-    clearTimeout(searchTimer);
-
-
-
-    let query = this.value.trim();
-
-
-
-    if(query.length < 2){
 
         suggestionBox.innerHTML="";
 
-        return;
 
-    }
+        data.forEach(place=>{
 
+            let item=document.createElement("div");
 
+            item.className="suggestionItem";
 
-    // évite trop de requêtes
-    searchTimer=setTimeout(
-    async ()=>{
-
-
-        try{
+            item.innerText=place.display_name;
 
 
-            let res = await fetch(
+            item.onclick=()=>{
 
-            "https://nominatim.openstreetmap.org/search?format=json&q="
-            +
-            encodeURIComponent(query)
-            +
-            "&limit=5&accept-language=fr"
+                map.flyTo(
+                    [
+                        place.lat,
+                        place.lon
+                    ],
+                    10,
+                    {
+                        duration:1.2
+                    }
+                );
 
-            );
+                search.value=place.display_name;
 
-
-
-            let data = await res.json();
-
-
-
-            suggestionBox.innerHTML="";
-
-
-
-            data.forEach(place=>{
+                suggestionBox.innerHTML="";
+            };
 
 
-                let item =
-                document.createElement("div");
+            suggestionBox.appendChild(item);
+
+        });
 
 
-
-                item.className =
-                "suggestionItem";
-
-
-
-                item.innerText =
-                place.display_name;
-
-
-
-
-                item.onclick=()=>{
-
-
-                    map.flyTo(
-
-                        [
-                            place.lat,
-                            place.lon
-                        ],
-
-                        10,
-
-                        {
-                            duration:1.2
-                        }
-
-                    );
-
-
-
-                    search.value =
-                    place.display_name;
-
-
-
-                    suggestionBox.innerHTML="";
-
-
-                };
-
-
-
-                suggestionBox.appendChild(item);
-
-
-
-            });
-
-
-
-        }
-        catch(e){
-
-            console.log(e);
-
-        }
-
-
-
-    },
-    400);
-
-
+    },400);
 
 });
 
 
 
-
-
-
-
-/* =========================
-             MICRO
-========================= */
-
-
+/* MICRO */
 
 function startVoice(){
 
-
-    if(
-    !("webkitSpeechRecognition" in window)
-    &&
-    !("SpeechRecognition" in window)
-    ){
-
-        alert(
-        "La reconnaissance vocale n'est pas disponible sur ce navigateur"
-        );
-
-        return;
-
-    }
-
-
-
-
-    const SpeechRecognition =
+    const SpeechRecognition=
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
 
 
-
-    const recognition =
-    new SpeechRecognition();
-
-
-
-    recognition.lang =
-    "fr-FR";
+    if(!SpeechRecognition){
+        alert("Micro non disponible");
+        return;
+    }
 
 
+    let recognition=new SpeechRecognition();
 
-    recognition.continuous=false;
-
-
-
-    recognition.onresult =
-    function(e){
+    recognition.lang="fr-FR";
 
 
-        let text =
+    recognition.onresult=e=>{
+
+        search.value=
         e.results[0][0].transcript;
-
-
-
-        search.value=text;
-
-
 
         search.dispatchEvent(
             new Event("input")
         );
-
-
     };
 
 
-
     recognition.start();
-
-
 }
 
 
 
 
-
-
-
-/* =========================
-          FEUX
-========================= */
-
+/* FEUX */
 
 let markers=[];
 
 
-
-
 async function loadFires(){
-
 
     clearMap();
 
 
-
     try{
 
+        let res=await fetch(API_URL);
 
-        let res =
-        await fetch(API_URL);
-
-
-
-        let text =
-        await res.text();
+        let text=await res.text();
 
 
-
-
-        let rows =
-        text.split("\n").slice(1);
-
-
-
+        let rows=text.split("\n").slice(1);
 
 
         rows.forEach(row=>{
 
-
-            let cols =
-            row.split(",");
+            let cols=row.split(",");
 
 
-
-            let lat =
-            parseFloat(cols[0]);
-
-
-
-            let lon =
-            parseFloat(cols[1]);
+            let lat=parseFloat(cols[0]);
+            let lon=parseFloat(cols[1]);
+            let bright=parseFloat(cols[2]);
 
 
-
-            let bright =
-            parseFloat(cols[2]);
-
-
-
-            if(
-            isNaN(lat)
-            ||
-            isNaN(lon)
-            ){
-
+            if(isNaN(lat)||isNaN(lon)){
                 return;
-
             }
 
 
 
-
-
-            let color;
-
-
-
-            if(bright>350){
-
-                color="#ff0000";
-
-            }
-            else if(bright>320){
-
-                color="#ff8800";
-
-            }
-            else if(bright>300){
-
-                color="#ffd000";
-
-            }
-            else{
-
-                color="#00ff88";
-
-            }
+            let color=
+            bright>350 ? "#ff0000" :
+            bright>320 ? "#ff8800" :
+            bright>300 ? "#ffd000" :
+            "#00ff88";
 
 
 
-
-
-            let marker =
-            L.circleMarker(
-
-                [
-                    lat,
-                    lon
-                ],
-
+            let marker=L.circleMarker(
+                [lat,lon],
                 {
-
                     radius:5,
-
                     color:color,
-
                     fillColor:color,
-
                     fillOpacity:.8,
-
                     weight:1
-
                 }
-
-            )
-            .addTo(map);
-
+            ).addTo(map);
 
 
 
             marker.bindPopup(
-
             `
-            🔥 Incendie détecté<br>
+            🔥 Feu détecté<br>
             Latitude : ${lat}<br>
             Longitude : ${lon}<br>
             Intensité : ${bright}
             `
-
             );
-
-
 
 
             markers.push(marker);
 
-
-
         });
-
 
 
     }
     catch(e){
 
-
-        alert(
-        "Impossible de charger les feux actuellement"
-        );
-
+        alert("Erreur chargement des feux");
 
         console.log(e);
 
-
     }
 
-
-
 }
-
-
-
-
 
 
 
 function clearMap(){
 
-
-
-    markers.forEach(
-
-        m=>map.removeLayer(m)
-
-    );
-
-
+    markers.forEach(m=>{
+        map.removeLayer(m);
+    });
 
     markers=[];
-
-
-
 }
-
-
 
 
 </script>
 
-
 </body>
-
 </html>
