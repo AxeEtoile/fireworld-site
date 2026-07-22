@@ -60,27 +60,26 @@ body {
     stroke-width:2;
 }
 
-/* ===== SLIDER PREMIUM ===== */
+/* ===== SLIDER PRO ===== */
 .zoomWrapper {
     position:absolute;
     right:20px;
     top:50%;
     transform:translateY(-50%);
-    height:70%;
+    height:65%;
     display:flex;
     align-items:center;
     z-index:1000;
 }
 
-.zoomLabels {
+/* ICÔNES */
+.zoomIcons {
     display:flex;
     flex-direction:column;
     justify-content:space-between;
     height:100%;
-    margin-right:12px;
-    color:white;
-    font-size:13px;
-    opacity:0.9;
+    margin-right:10px;
+    font-size:18px;
 }
 
 /* SLIDER */
@@ -89,7 +88,7 @@ body {
     appearance:none;
     width:6px;
     height:100%;
-    background:rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.2);
     border-radius:50px;
     outline:none;
     cursor:pointer;
@@ -103,7 +102,7 @@ body {
     background:linear-gradient(to top, #ff4d00, #ffaa00, #00ff88);
 }
 
-/* ROND */
+/* THUMB */
 .zoomSlider::-webkit-slider-thumb {
     -webkit-appearance:none;
     width:20px;
@@ -111,7 +110,9 @@ body {
     border-radius:50%;
     background:white;
     border:3px solid #ff4d00;
-    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+    cursor:pointer;
+    margin-top:-7px; /* FIX IMPORTANT */
 }
 
 /* FIREFOX */
@@ -154,15 +155,17 @@ body {
 
 <!-- SLIDER -->
 <div class="zoomWrapper">
-    <div class="zoomLabels">
-        <span>Monde</span>
-        <span>Pays</span>
-        <span>Région</span>
-        <span>Département</span>
-        <span>Ville</span>
+
+    <div class="zoomIcons">
+        <div>🌍</div>
+        <div>🏳️</div>
+        <div>🗺️</div>
+        <div>📍</div>
+        <div>🏙️</div>
     </div>
 
     <input type="range" min="1" max="5" value="3" id="zoomLevel" class="zoomSlider">
+
 </div>
 
 <button class="fireBtn" onclick="loadFires()">🔥 Feux en direct</button>
@@ -181,15 +184,18 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let markers = [];
 
-/* ZOOM */
-function getZoom(){
-    const zooms = [2,5,8,11,14];
-    return zooms[document.getElementById("zoomLevel").value - 1];
-}
-
-document.getElementById("zoomLevel").oninput = function(){
-    map.setZoom(getZoom());
+/* ZOOM FIX */
+const zoomMap = {
+    1:2,
+    2:5,
+    3:8,
+    4:11,
+    5:14
 };
+
+document.getElementById("zoomLevel").addEventListener("input", function(){
+    map.setZoom(zoomMap[this.value]);
+});
 
 /* SEARCH */
 async function searchCity(){
@@ -199,7 +205,7 @@ async function searchCity(){
     let data = await res.json();
 
     if(data.length > 0){
-        map.setView([data[0].lat, data[0].lon], getZoom());
+        map.setView([data[0].lat, data[0].lon], zoomMap[document.getElementById("zoomLevel").value]);
     }
 }
 
