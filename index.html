@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>🔥 FireWorld</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body { margin:0; font-family: 'Segoe UI'; background:black; }
+
+#map { height:100vh; }
+
+.panel {
+    position:absolute;
+    top:20px;
+    left:20px;
+    z-index:1000;
+    background:rgba(0,0,0,0.85);
+    padding:15px;
+    border-radius:15px;
+    color:white;
+    width:260px;
+    box-shadow:0 0 20px rgba(255,0,0,0.3);
+}
+
+.panel h2 { margin-top:0; }
+
+button {
+    width:100%;
+    margin-top:8px;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    background:linear-gradient(45deg, red, orange);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover { opacity:0.8; }
+
+.search {
+    width:100%;
+    padding:8px;
+    border-radius:6px;
+    border:none;
+    margin-top:8px;
+}
+
+.legend {
+    position:absolute;
+    bottom:20px;
+    right:20px;
+    background:black;
+    color:white;
+    padding:10px;
+    border-radius:10px;
+}
+
+.legend div { margin:5px 0; }
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+<h2>🔥 FireWorld</h2>
+
+<input class="search" id="searchCity" placeholder="Entrer une ville">
+
+<button onclick="searchCity()">🔍 Rechercher</button>
+<button onclick="loadFires()">🔥 Charger feux en direct</button>
+<button onclick="locateUser()">📍 Me localiser</button>
+<button onclick="resetMap()">❌ Reset</button>
+
+</div>
+
+<div id="map"></div>
+
+<div class="legend">
+<div style="color:green">● Faible</div>
+<div style="color:yellow">● Moyen</div>
+<div style="color:orange">● Élevé</div>
+<div style="color:red">● Critique</div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+// ====== CONFIG
+const API_URL = "https://fireworld-api.onrender.com/feux";
+
+// ====== MAP
+let map = L.map('map').setView([46.6, 2.4], 6);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+let markers = [];
+
+// ====== LOAD FIRES
+async function loadFires(){
+
+    resetMap();
+
+    const res = await fetch(API_URL);
+    const text = await res.text();
+
+    const rows = text.split("\n").slice(1);
+
+    rows.forEach(row => {
+
+        const cols = row.split(",");
+
+        let lat = parseFloat(cols[0]);
+        let lon = parseFloat(cols[1]);
+        let brightness = parseFloat(cols[2]);
+
+        if(!lat || !lon) return;
+
+        let color =
+            brightness > 350 ? "red" :
+            brightness > 320 ? "orange" :
+            brightness > 300 ? "yellow" : "green";
+
+        let marker = L.circleMarker([lat, lon], {
+            radius:5,
+            color:color,
+            fillOpacity:0.8
+        }).addTo(map);
+
+        marker.bindPopup(`
+            🔥 Feu détecté<br>
+            Intensité: ${brightness}
+        `);
+
+        markers.push(marker);
+    });
+}
+
+// ====== RESET
+function resetMap(){
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+}
+
+// ====== GEOLOC
+function locateUser(){
+    map.locate({setView:true, maxZoom:10});
+}
+
+map.on("locationfound", e=>{
+    L.marker(e.latlng).addTo(map)
+    .bindPopup("📍 Vous êtes ici")
+    .openPopup();
+});
+
+// ====== SEARCH CITY
+async function searchCity(){
+    let city = document.getElementById("searchCity").value;
+
+    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${city}`);
+    let data = await res.json();
+
+    if(data.length > 0){
+        map.setView([data[0].lat, data[0].lon], 10);
+    }
+}
+
+</script>
+
+</body>
+</html>
