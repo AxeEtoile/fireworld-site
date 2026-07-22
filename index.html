@@ -39,7 +39,7 @@ body {
     border-radius:50px;
 }
 
-/* ===== MICRO GOOGLE STYLE ===== */
+/* ===== MICRO ===== */
 .mic-btn {
     width:42px;
     height:42px;
@@ -68,33 +68,33 @@ body {
     transform:translateY(-50%);
     height:65%;
     display:flex;
-    flex-direction:column;
     align-items:center;
-    justify-content:space-between;
     z-index:1000;
-}
-
-/* + et - */
-.zoomBtn {
-    color:white;
-    font-size:22px;
-    font-weight:bold;
-    margin:5px 0;
 }
 
 /* TRACK */
 .sliderTrack {
-    width:4px;
-    flex:1;
-    background:white;
+    width:6px;
+    height:100%;
+    background:rgba(255,255,255,0.6);
     border-radius:50px;
     position:relative;
 }
 
+/* effet glow */
+.sliderTrack::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50px;
+    background:rgba(255,255,255,0.2);
+    filter:blur(4px);
+}
+
 /* THUMB */
 .sliderThumb {
-    width:16px;
-    height:16px;
+    width:18px;
+    height:18px;
     border-radius:50%;
     background:white;
     position:absolute;
@@ -102,7 +102,7 @@ body {
     transform:translateX(-50%);
     top:50%;
     cursor:pointer;
-    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    box-shadow:0 4px 12px rgba(0,0,0,0.6);
 }
 
 /* ===== BOUTON ===== */
@@ -124,12 +124,10 @@ body {
 
 <body>
 
-<!-- BARRE -->
 <div class="topbar">
     <input id="search" placeholder="Rechercher un lieu...">
     <button onclick="startVoice()" class="mic-btn">
         <svg viewBox="0 0 24 24">
-            <path d="M12 3v10"></path>
             <rect x="8" y="3" width="8" height="12" rx="4"></rect>
             <path d="M5 11a7 7 0 0 0 14 0"></path>
             <path d="M12 18v3"></path>
@@ -137,17 +135,10 @@ body {
     </button>
 </div>
 
-<!-- SLIDER -->
 <div class="zoomWrapper">
-
-    <div class="zoomBtn">+</div>
-
     <div class="sliderTrack" id="sliderTrack">
         <div class="sliderThumb" id="sliderThumb"></div>
     </div>
-
-    <div class="zoomBtn">−</div>
-
 </div>
 
 <button class="fireBtn" onclick="loadFires()">🔥 Feux en direct</button>
@@ -160,17 +151,23 @@ body {
 
 const API_URL = "https://fireworld-api.onrender.com/feux";
 
-let map = L.map('map').setView([46.6, 2.4], 6);
+/* MAP */
+let map = L.map('map', {
+    zoomControl:false
+}).setView([46.6, 2.4], 6);
+
+map.setMinZoom(4);
+map.setMaxZoom(14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let markers = [];
 
-/* ===== SLIDER FIX TOTAL ===== */
+/* ===== SLIDER ===== */
 const thumb = document.getElementById("sliderThumb");
 const track = document.getElementById("sliderTrack");
 
-const zoomMap = [2,5,8,11,14];
+const zoomMap = [4,6,8,11,14];
 
 let dragging = false;
 
@@ -183,13 +180,13 @@ function updatePosition(y) {
     thumb.style.top = pos + "px";
 
     let ratio = pos / rect.height;
-    let step = Math.round(ratio * 4);
-    let zoom = zoomMap[4 - step];
+    let step = Math.round(ratio * (zoomMap.length - 1));
+    let zoom = zoomMap[zoomMap.length - 1 - step];
 
     map.setZoom(zoom);
 }
 
-/* souris */
+/* interactions */
 thumb.addEventListener("mousedown", () => dragging = true);
 document.addEventListener("mouseup", () => dragging = false);
 
@@ -197,7 +194,6 @@ document.addEventListener("mousemove", (e) => {
     if (dragging) updatePosition(e.clientY);
 });
 
-/* mobile */
 thumb.addEventListener("touchstart", () => dragging = true);
 document.addEventListener("touchend", () => dragging = false);
 
@@ -205,12 +201,11 @@ document.addEventListener("touchmove", (e) => {
     if (dragging) updatePosition(e.touches[0].clientY);
 });
 
-/* clic barre */
 track.addEventListener("click", (e) => {
     updatePosition(e.clientY);
 });
 
-/* position initiale centrée */
+/* position initiale */
 setTimeout(() => {
     const rect = track.getBoundingClientRect();
     updatePosition(rect.top + rect.height / 2);
