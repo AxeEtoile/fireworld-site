@@ -52,7 +52,7 @@ body {
     cursor:pointer;
 }
 
-/* ===== SLIDER ===== */
+/* ===== SLIDER PRO ===== */
 .zoomWrapper {
     position:absolute;
     right:20px;
@@ -73,51 +73,28 @@ body {
     font-size:18px;
 }
 
-/* zone tactile large */
-.zoomSlider {
-    -webkit-appearance:none;
-    appearance:none;
-    width:30px;
+/* TRACK */
+.sliderTrack {
+    width:8px;
     height:100%;
-    background:transparent;
-    outline:none;
-    cursor:pointer;
-}
-
-/* barre */
-.zoomSlider::-webkit-slider-runnable-track {
-    width:6px;
-    height:100%;
-    margin:auto;
     border-radius:50px;
     background:linear-gradient(to top, #ff4d00, #ffaa00, #00ff88);
+    position:relative;
 }
 
-/* rond */
-.zoomSlider::-webkit-slider-thumb {
-    -webkit-appearance:none;
-    width:18px;
-    height:18px;
+/* THUMB */
+.sliderThumb {
+    width:22px;
+    height:22px;
     border-radius:50%;
     background:white;
     border:3px solid #ff4d00;
-    box-shadow:0 3px 8px rgba(0,0,0,0.4);
+    position:absolute;
+    left:50%;
+    transform:translate(-50%, -50%);
+    top:50%;
     cursor:pointer;
-}
-
-/* firefox */
-.zoomSlider::-moz-range-track {
-    width:6px;
-    border-radius:50px;
-    background:linear-gradient(to top, #ff4d00, #ffaa00, #00ff88);
-}
-
-.zoomSlider::-moz-range-thumb {
-    width:18px;
-    height:18px;
-    border-radius:50%;
-    background:white;
-    border:3px solid #ff4d00;
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
 }
 
 /* ===== BOUTON ===== */
@@ -155,7 +132,9 @@ body {
         <div>🏙️</div>
     </div>
 
-    <input type="range" min="1" max="5" value="3" id="zoomLevel" class="zoomSlider">
+    <div class="sliderTrack" id="sliderTrack">
+        <div class="sliderThumb" id="sliderThumb"></div>
+    </div>
 </div>
 
 <button class="fireBtn" onclick="loadFires()">🔥 Feux en direct</button>
@@ -174,18 +153,51 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let markers = [];
 
-/* ZOOM STABLE */
-const zoomMap = {
-    1:2,
-    2:5,
-    3:8,
-    4:11,
-    5:14
-};
+/* ===== SLIDER CUSTOM ===== */
+const thumb = document.getElementById("sliderThumb");
+const track = document.getElementById("sliderTrack");
 
-document.getElementById("zoomLevel").addEventListener("input", function(){
-    map.setZoom(zoomMap[this.value]);
+const zoomMap = [2,5,8,11,14];
+
+let dragging = false;
+
+function updatePosition(y) {
+    const rect = track.getBoundingClientRect();
+
+    let pos = y - rect.top;
+    pos = Math.max(0, Math.min(pos, rect.height));
+
+    thumb.style.top = pos + "px";
+
+    let step = Math.round((pos / rect.height) * 4);
+    let zoom = zoomMap[4 - step];
+
+    map.setZoom(zoom);
+}
+
+/* souris */
+thumb.addEventListener("mousedown", () => dragging = true);
+document.addEventListener("mouseup", () => dragging = false);
+document.addEventListener("mousemove", (e) => {
+    if (dragging) updatePosition(e.clientY);
 });
+
+/* tactile */
+thumb.addEventListener("touchstart", () => dragging = true);
+document.addEventListener("touchend", () => dragging = false);
+document.addEventListener("touchmove", (e) => {
+    if (dragging) updatePosition(e.touches[0].clientY);
+});
+
+/* clic barre */
+track.addEventListener("click", (e) => {
+    updatePosition(e.clientY);
+});
+
+/* position initiale */
+setTimeout(() => {
+    updatePosition(track.getBoundingClientRect().height / 2);
+}, 100);
 
 /* SEARCH */
 async function searchCity(){
@@ -195,7 +207,7 @@ async function searchCity(){
     let data = await res.json();
 
     if(data.length > 0){
-        map.setView([data[0].lat, data[0].lon], zoomMap[document.getElementById("zoomLevel").value]);
+        map.setView([data[0].lat, data[0].lon], 8);
     }
 }
 
