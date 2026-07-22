@@ -60,6 +60,30 @@ body {
     fill:none;
 }
 
+/* ===== SUGGESTIONS ===== */
+.suggestions {
+    position:absolute;
+    top:70px;
+    left:50%;
+    transform:translateX(-50%);
+    width:85%;
+    background:white;
+    border-radius:15px;
+    max-height:200px;
+    overflow:auto;
+    z-index:1000;
+    box-shadow:0 4px 20px rgba(0,0,0,0.2);
+}
+
+.suggestionItem {
+    padding:10px;
+    cursor:pointer;
+}
+
+.suggestionItem:hover {
+    background:#f0f0f0;
+}
+
 /* ===== SLIDER ===== */
 .zoomWrapper {
     position:absolute;
@@ -67,42 +91,38 @@ body {
     top:50%;
     transform:translateY(-50%);
     height:65%;
-    display:flex;
-    align-items:center;
     z-index:1000;
 }
 
-/* TRACK */
+.zoomHint {
+    position:absolute;
+    top:-25px;
+    right:-10px;
+    color:white;
+    font-size:12px;
+    opacity:0.9;
+}
+
 .sliderTrack {
-    width:6px;
+    width:10px;
     height:100%;
-    background:rgba(255,255,255,0.6);
+    background:rgba(255,255,255,0.9);
     border-radius:50px;
     position:relative;
+    box-shadow:0 0 12px rgba(255,255,255,0.6);
 }
 
-/* effet glow */
-.sliderTrack::before {
-    content:"";
-    position:absolute;
-    inset:0;
-    border-radius:50px;
-    background:rgba(255,255,255,0.2);
-    filter:blur(4px);
-}
-
-/* THUMB */
 .sliderThumb {
-    width:18px;
-    height:18px;
+    width:20px;
+    height:20px;
     border-radius:50%;
     background:white;
     position:absolute;
     left:50%;
-    transform:translateX(-50%);
+    transform:translate(-50%, -50%);
     top:50%;
     cursor:pointer;
-    box-shadow:0 4px 12px rgba(0,0,0,0.6);
+    box-shadow:0 4px 12px rgba(0,0,0,0.7);
 }
 
 /* ===== BOUTON ===== */
@@ -135,7 +155,10 @@ body {
     </button>
 </div>
 
+<div id="suggestions" class="suggestions"></div>
+
 <div class="zoomWrapper">
+    <div class="zoomHint">Zoom</div>
     <div class="sliderTrack" id="sliderTrack">
         <div class="sliderThumb" id="sliderThumb"></div>
     </div>
@@ -152,32 +175,25 @@ body {
 const API_URL = "https://fireworld-api.onrender.com/feux";
 
 /* MAP */
-let map = L.map('map', {
-    zoomControl:false
-}).setView([46.6, 2.4], 6);
+let map = L.map('map', { zoomControl:false }).setView([46.6, 2.4], 6);
 
 map.setMinZoom(4);
 map.setMaxZoom(14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-let markers = [];
-
 /* ===== SLIDER ===== */
 const thumb = document.getElementById("sliderThumb");
 const track = document.getElementById("sliderTrack");
 
 const zoomMap = [4,6,8,11,14];
-
 let dragging = false;
 
-function updatePosition(y) {
+function updateFromSlider(y){
     const rect = track.getBoundingClientRect();
 
     let pos = y - rect.top;
     pos = Math.max(0, Math.min(pos, rect.height));
-
-    thumb.style.top = pos + "px";
 
     let ratio = pos / rect.height;
     let step = Math.round(ratio * (zoomMap.length - 1));
@@ -186,45 +202,76 @@ function updatePosition(y) {
     map.setZoom(zoom);
 }
 
+/* UPDATE SLIDER FROM MAP */
+function syncSliderWithMap(){
+    const rect = track.getBoundingClientRect();
+    let zoom = map.getZoom();
+
+    let index = zoomMap.findIndex(z => z >= zoom);
+    if(index === -1) index = zoomMap.length - 1;
+
+    let ratio = 1 - (index / (zoomMap.length - 1));
+    let pos = ratio * rect.height;
+
+    thumb.style.top = pos + "px";
+}
+
 /* interactions */
 thumb.addEventListener("mousedown", () => dragging = true);
 document.addEventListener("mouseup", () => dragging = false);
 
 document.addEventListener("mousemove", (e) => {
-    if (dragging) updatePosition(e.clientY);
+    if (dragging) updateFromSlider(e.clientY);
 });
 
 thumb.addEventListener("touchstart", () => dragging = true);
 document.addEventListener("touchend", () => dragging = false);
 
 document.addEventListener("touchmove", (e) => {
-    if (dragging) updatePosition(e.touches[0].clientY);
+    if (dragging) updateFromSlider(e.touches[0].clientY);
 });
 
 track.addEventListener("click", (e) => {
-    updatePosition(e.clientY);
+    updateFromSlider(e.clientY);
 });
 
-/* position initiale */
-setTimeout(() => {
-    const rect = track.getBoundingClientRect();
-    updatePosition(rect.top + rect.height / 2);
-}, 100);
+/* 🔥 SYNC MOLETTE / ZOOM */
+map.on("zoomend", () => {
+    syncSliderWithMap();
+});
 
-/* SEARCH */
-async function searchCity(){
-    let query = document.getElementById("search").value;
+/* init */
+setTimeout(syncSliderWithMap, 200);
 
-    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+/* ===== AUTOCOMPLETE ===== */
+let suggestionBox = document.getElementById("suggestions");
+
+document.getElementById("search").addEventListener("input", async function(){
+
+    let query = this.value;
+
+    if(query.length < 2){
+        suggestionBox.innerHTML = "";
+        return;
+    }
+
+    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5`);
     let data = await res.json();
 
-    if(data.length > 0){
-        map.setView([data[0].lat, data[0].lon], 8);
-    }
-}
+    suggestionBox.innerHTML = "";
 
-document.getElementById("search").addEventListener("keydown", function(e){
-    if(e.key === "Enter") searchCity();
+    data.forEach(place => {
+        let item = document.createElement("div");
+        item.className = "suggestionItem";
+        item.innerText = place.display_name;
+
+        item.onclick = () => {
+            map.setView([place.lat, place.lon], 10);
+            suggestionBox.innerHTML = "";
+        };
+
+        suggestionBox.appendChild(item);
+    });
 });
 
 /* MICRO */
@@ -233,17 +280,16 @@ function startVoice(){
     recognition.lang = "fr-FR";
 
     recognition.onresult = function(e){
-        let text = e.results[0][0].transcript;
-        document.getElementById("search").value = text;
-        searchCity();
+        document.getElementById("search").value = e.results[0][0].transcript;
     };
 
     recognition.start();
 }
 
 /* FEUX */
-async function loadFires(){
+let markers = [];
 
+async function loadFires(){
     clearMap();
 
     let res = await fetch(API_URL);
@@ -252,7 +298,6 @@ async function loadFires(){
     let rows = text.split("\n").slice(1);
 
     rows.forEach(row => {
-
         let cols = row.split(",");
 
         let lat = parseFloat(cols[0]);
@@ -272,13 +317,10 @@ async function loadFires(){
             fillOpacity:0.8
         }).addTo(map);
 
-        marker.bindPopup(`🔥 Intensité : ${bright}`);
-
         markers.push(marker);
     });
 }
 
-/* RESET */
 function clearMap(){
     markers.forEach(m => map.removeLayer(m));
     markers = [];
