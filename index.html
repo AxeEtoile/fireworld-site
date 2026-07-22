@@ -52,15 +52,7 @@ body {
     cursor:pointer;
 }
 
-.mic-btn svg {
-    width:20px;
-    height:20px;
-    stroke:#202124;
-    fill:none;
-    stroke-width:2;
-}
-
-/* ===== SLIDER PRO ===== */
+/* ===== SLIDER ===== */
 .zoomWrapper {
     position:absolute;
     right:20px;
@@ -72,7 +64,6 @@ body {
     z-index:1000;
 }
 
-/* ICÔNES */
 .zoomIcons {
     display:flex;
     flex-direction:column;
@@ -82,43 +73,48 @@ body {
     font-size:18px;
 }
 
-/* SLIDER */
+/* zone tactile large */
 .zoomSlider {
     -webkit-appearance:none;
     appearance:none;
-    width:6px;
+    width:30px;
     height:100%;
-    background:rgba(255,255,255,0.2);
-    border-radius:50px;
+    background:transparent;
     outline:none;
     cursor:pointer;
 }
 
-/* TRACK */
+/* barre */
 .zoomSlider::-webkit-slider-runnable-track {
     width:6px;
     height:100%;
+    margin:auto;
     border-radius:50px;
     background:linear-gradient(to top, #ff4d00, #ffaa00, #00ff88);
 }
 
-/* THUMB */
+/* rond */
 .zoomSlider::-webkit-slider-thumb {
     -webkit-appearance:none;
-    width:20px;
-    height:20px;
+    width:18px;
+    height:18px;
     border-radius:50%;
     background:white;
     border:3px solid #ff4d00;
-    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+    box-shadow:0 3px 8px rgba(0,0,0,0.4);
     cursor:pointer;
-    margin-top:-7px; /* FIX IMPORTANT */
 }
 
-/* FIREFOX */
+/* firefox */
+.zoomSlider::-moz-range-track {
+    width:6px;
+    border-radius:50px;
+    background:linear-gradient(to top, #ff4d00, #ffaa00, #00ff88);
+}
+
 .zoomSlider::-moz-range-thumb {
-    width:20px;
-    height:20px;
+    width:18px;
+    height:18px;
     border-radius:50%;
     background:white;
     border:3px solid #ff4d00;
@@ -146,26 +142,20 @@ body {
 <!-- BARRE -->
 <div class="topbar">
     <input id="search" placeholder="Rechercher un lieu...">
-    <button onclick="startVoice()" class="mic-btn">
-        <svg viewBox="0 0 24 24">
-            <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 14 0h-2zM12 19v3m-4 0h8"/>
-        </svg>
-    </button>
+    <button onclick="startVoice()" class="mic-btn">🎤</button>
 </div>
 
 <!-- SLIDER -->
 <div class="zoomWrapper">
-
     <div class="zoomIcons">
         <div>🌍</div>
-        <div>🏳️</div>
+        <div>🌐</div>
         <div>🗺️</div>
         <div>📍</div>
         <div>🏙️</div>
     </div>
 
     <input type="range" min="1" max="5" value="3" id="zoomLevel" class="zoomSlider">
-
 </div>
 
 <button class="fireBtn" onclick="loadFires()">🔥 Feux en direct</button>
@@ -184,7 +174,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let markers = [];
 
-/* ZOOM FIX */
+/* ZOOM STABLE */
 const zoomMap = {
     1:2,
     2:5,
